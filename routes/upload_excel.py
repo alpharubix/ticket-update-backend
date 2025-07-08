@@ -1,10 +1,13 @@
 import io
-from fastapi import  File, APIRouter, UploadFile
+from fastapi import  File, APIRouter, UploadFile,Form
 import pandas as pd
 from fastapi.responses import JSONResponse
 import requests
 import dotenv
 import os
+
+from requests import Request
+
 from utils.access_token import get_access_token
 from fastapi.responses import  FileResponse
 dotenv.load_dotenv()
@@ -12,19 +15,28 @@ router = APIRouter()
 
 
 @router.post('/upload-excel')
-async def upload_excel(file: UploadFile = File(...)):
+async def upload_excel(file: UploadFile = File(...),username: str = Form(...)):
     if file.filename.endswith('.xlsx'):
         try:
+           user_id_dict = {"Sutapa Roy":"666329000003193001","Subhasini T S":"666329000000724001","Namrata Srivastava":"666329000003200001"}
+           user = user_id_dict.get(username)
+           print(user)
            contents = await file.read()
            excel_data = io.BytesIO(contents)
            df = pd.read_excel(excel_data)
            data = df.to_dict(orient='records')
+           print("This is the data->", data)
+           if len(data) == 0:
+               return JSONResponse(status_code=404, content={"message": "No Ticket found To Update Pls provide some ticket"})
            # check if the headers are correct
            required_headers = {'ticket_id','case_status','comments'}
            headers = data[0].keys()
+           print(headers)
            excel_headers = set(headers)
            if required_headers != excel_headers:
                return JSONResponse(content={"message":"Excel headers mismatch found"},status_code=200)
+           # elif len(data) == 0:
+           #     return JSONResponse(content={"message":"No ticket found for update provide some ticket"},status_code=200)
            else:
                session = requests.Session()
                access_token = get_access_token()
@@ -56,7 +68,7 @@ async def upload_excel(file: UploadFile = File(...)):
                        if keys=='comments' and value != '':
                                comment_dict.update({
                               "content": value,
-                              "commenterId": "666329000003193001",
+                              "commenterId": user,
                                "isPublic": True })
                    print(ticket_update_dict)
                    print(comment_dict)
