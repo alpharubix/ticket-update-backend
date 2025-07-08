@@ -27,7 +27,7 @@ async def upload_excel(file: UploadFile = File(...),username: str = Form(...)):
            data = df.to_dict(orient='records')
            print("This is the data->", data)
            if len(data) == 0:
-               return JSONResponse(status_code=404, content={"message": "No Ticket found To Update Pls provide some ticket"})
+               return JSONResponse(status_code=404, content={"message": "No Ticket found To Update please provide some ticket"})
            # check if the headers are correct
            required_headers = {'ticket_id','case_status','comments'}
            headers = data[0].keys()
